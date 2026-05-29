@@ -121,7 +121,8 @@
   (let* ((args (uiop:command-line-arguments))
          (root (if args
                    (first args)
-                   "."))
+                   "~/Projetos"))
+		   ;;; If you have another "project" folder, you can hard code here.  
          (repos (find-git-repos root)))
 
     (format t "~%Scanning immediate subdirectories of: ~A~%"
