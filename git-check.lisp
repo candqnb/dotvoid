@@ -1,4 +1,4 @@
-#!/usr/bin/env sbcl --script
+#!/usr/bin/sbcl --script
 
 ;;; Git repository checker (1-level depth, since my dotvoid sometimes has more than one git.)
 ;;;
@@ -90,7 +90,6 @@
             :error (princ-to-string e)))))
 
 (defun print-result (result)
-  (format t "~%================================================~%")
   (format t "Repository: ~A~%"
           (getf result :repo))
 

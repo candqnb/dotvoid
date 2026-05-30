@@ -46,6 +46,8 @@
 (make-directory "~/.emacs.d/auto-saves/" t)
 
 ;; UI
+(global-display-line-numbers-mode 1)
+
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
@@ -78,9 +80,14 @@
 
 (global-so-long-mode 1)
 
-(setq-default indent-tabs-mode t)
+;; C/C++ Identation
+(add-hook
+ 'c-mode-common-hook
+ (lambda ()
+   (setq c-basic-offset 4)))
+
+(setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
-(setq-default standard-indent 4)
 
 ;; Completion
 (ido-mode 1)
