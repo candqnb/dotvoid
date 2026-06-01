@@ -7,8 +7,16 @@
  (lambda ()
    (setq gc-cons-threshold (* 64 1024 1024))))
 
+(setq inhibit-startup-screen t
+      inhibit-startup-message t
+      inhibit-startup-echo-area-message t)
+
+(setq initial-scratch-message ";; Happy Hacking!")
+
 ;; Custom file
-(setq custom-file (locate-user-emacs-file "custom.el"))
+(setq custom-file
+      (locate-user-emacs-file "custom.el"))
+
 (load custom-file 'noerror 'nomessage)
 
 ;; Packages
@@ -18,56 +26,59 @@
       '(("gnu"   . "https://elpa.gnu.org/packages/")
         ("melpa" . "https://melpa.org/packages/")))
 
-(package-initialize)
-
-(unless package-archive-contents
-  (package-refresh-contents))
-
 (unless (package-installed-p 'use-package)
+  (package-refresh-contents)
   (package-install 'use-package))
 
 (require 'use-package)
 
 (setq use-package-always-ensure t)
 
+;; Magit
 (use-package magit
-  :commands (magit-status))
+  :commands magit-status)
 
 (global-set-key (kbd "C-x g") #'magit-status)
 
+;; LaTeX
+(use-package tex
+  :ensure auctex
+  :defer t)
+
+;; Lean4
+(use-package nael
+  :mode "\.lean\'"
+  :commands nael)
+
 ;; Backups
 (setq backup-directory-alist
-      `(("." . "~/.emacs.d/backups/")))
+      '(("." . "~/.emacs.d/backups/")))
 
 (setq auto-save-file-name-transforms
-      `((".*" "~/.emacs.d/auto-saves/" t)))
+      '((".*" "~/.emacs.d/auto-saves/" t)))
 
 (make-directory "~/.emacs.d/backups/" t)
 (make-directory "~/.emacs.d/auto-saves/" t)
 
 ;; UI
-(global-display-line-numbers-mode 1)
-
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 
-(load-theme 'modus-vivendi t)
+(global-display-line-numbers-mode 1)
 
-(setq inhibit-startup-screen t
-      inhibit-startup-message t
-      inhibit-startup-echo-area-message t)
-
-(setq initial-scratch-message ";; Happy Hacking!")
-
-(setq ring-bell-function 'ignore)
+(when (member 'modus-vivendi
+              (custom-available-themes))
+  (load-theme 'modus-vivendi t))
 
 (setq frame-title-format "%b")
+
+(setq ring-bell-function #'ignore)
 
 (blink-cursor-mode -1)
 
 ;; Editing
-(fset 'yes-or-no-p 'y-or-n-p)
+(setq use-short-answers t)
 
 (global-auto-revert-mode 1)
 
@@ -75,20 +86,33 @@
 
 (show-paren-mode 1)
 
-(set-language-environment "UTF-8")
-(prefer-coding-system 'utf-8)
+(electric-pair-mode 1)
 
 (global-so-long-mode 1)
 
-;; C/C++ Identation
-(add-hook
- 'c-mode-common-hook
- (lambda ()
-   (setq c-basic-offset 4)))
+(set-language-environment "UTF-8")
+(prefer-coding-system 'utf-8)
 
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
 
+;; C/C++
+(add-hook
+ 'c-mode-common-hook
+ (lambda ()
+   (setq-local c-basic-offset 4)))
+
+;; Python
+(setq python-indent-offset 4)
+
+;; History and convenience
+(save-place-mode 1)
+
+(savehist-mode 1)
+
+(recentf-mode 1)
+
+(setq recentf-max-saved-items 100)
+
 ;; Completion
-(ido-mode 1)
-(ido-everywhere 1)
+(fido-mode 1)
