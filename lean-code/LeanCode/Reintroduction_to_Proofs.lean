@@ -23,3 +23,6 @@ example (P Q : Prop) (p : Prop) : Prop := by
     -- p : P is a proposition, Prop is a type of proposition
     -- where p : Prop is a proposition
     -- exact Q correctly returns a term of type Prop as expected.
+
+example : Type := by
+    exact Unit
