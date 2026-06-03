@@ -105,6 +105,22 @@
 ;; Python
 (setq python-indent-offset 4)
 
+;; PDF
+(use-package pdf-tools
+  :ensure t
+  :config
+  (pdf-tools-install)
+  (setq-default pdf-view-display-size 'fit-width)
+  (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward))
+(dolist (hook '(pdf-view-mode-hook
+                image-mode-hook
+                doc-view-mode-hook))
+  (add-hook hook
+            (lambda ()
+              ;; Disable line-numbers-mode if not needed.
+              (display-line-numbers-mode -1))))
+
+
 ;; History and convenience
 (save-place-mode 1)
 
