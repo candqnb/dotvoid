@@ -9,7 +9,6 @@
 ;;; 4. Verifies:
 ;;;    - Unstaged changes
 ;;;    - Pending commits to push
-;;;    - Commits to pull
 ;;; 5. Prints a summary log
 ;;; 
 ;;; Usage:
@@ -25,8 +24,11 @@
                      :ignore-error-status t)))
 
 (defun git-repo-p (dir)
-  (uiop:directory-exists-p
-   (merge-pathnames ".git/" dir)))
+  ;; FIX: support both .git directory and .git file (worktrees/submodules)
+  (or (uiop:directory-exists-p
+       (merge-pathnames ".git/" dir))
+      (uiop:file-exists-p
+       (merge-pathnames ".git" dir))))
 
 (defun immediate-subdirectories (dir)
   "Return only direct child directories."
@@ -45,87 +47,64 @@
 (defun git (repo args)
   (run-command
    (format nil
-           "git -C ~S ~A"
+           "git -C ~A ~A"
            (namestring repo)
            args)))
-
-(defun fetch-remote (repo)
-  (git repo "fetch --quiet"))
 
 (defun unstaged-changes-p (repo)
   (not (string= ""
                 (git repo "status --porcelain"))))
 
 (defun pending-commits-p (repo)
-  (let ((result
-         (git repo
-              "rev-list --count @{u}..HEAD")))
-    (not (or (string= result "")
-             (string= result "0")))))
-
-(defun commits-to-pull-p (repo)
-  (let ((result
-         (git repo
-              "rev-list --count HEAD..@{u}")))
-    (not (or (string= result "")
-             (string= result "0")))))
+  ;; FIX: safe handling when no upstream exists
+  (handler-case
+      (> (parse-integer
+          (git repo "rev-list --count @{u}..HEAD")
+          :junk-allowed t)
+         0)
+    (error () nil)))
 
 (defun current-branch (repo)
   (git repo "rev-parse --abbrev-ref HEAD"))
 
+(defun flag (value)
+  (if value "+" "-"))
+
 (defun check-repo (repo)
   (handler-case
-      (progn
-        (fetch-remote repo)
-
-        (list
-         :repo (namestring repo)
-         :branch (current-branch repo)
-         :unstaged (unstaged-changes-p repo)
-         :pending (pending-commits-p repo)
-         :to-pull (commits-to-pull-p repo)))
+      (list
+       :repo repo
+       :branch (current-branch repo)
+       :unstaged (unstaged-changes-p repo)
+       :pending (pending-commits-p repo))
 
     (error (e)
-      (list :repo (namestring repo)
+      (list :repo repo
             :error (princ-to-string e)))))
 
+(defun folder-name (path)
+  "Return only the last component of the path."
+  ;; FIX: safer than pathname-name for directories
+  (car (last (pathname-directory (uiop:ensure-directory-pathname path)))))
+
 (defun print-result (result)
-  (format t "Repository: ~A~%"
-          (getf result :repo))
-
   (if (getf result :error)
-      (format t "ERROR: ~A~%"
+      (format t "~20A ERROR: ~A~%"
+              (folder-name (getf result :repo))
               (getf result :error))
-
-      (progn
-        (format t "Branch: ~A~%"
-                (getf result :branch))
-
-        (format t "Unstaged changes : ~A~%"
-                (if (getf result :unstaged)
-                    "YES"
-                    "NO"))
-
-        (format t "Pending commits   : ~A~%"
-                (if (getf result :pending)
-                    "YES"
-                    "NO"))
-
-        (format t "Need pull         : ~A~%"
-                (if (getf result :to-pull)
-                    "YES"
-                    "NO")))))
+      (format t "~20A [~A] M~A P:~A~%"
+              (folder-name (getf result :repo))
+              (getf result :branch)
+              (flag (getf result :unstaged))
+              (flag (getf result :pending)))))
 
 (defun main ()
   (let* ((args (uiop:command-line-arguments))
-         (root (if args
-                   (first args)
-                   "~/Projetos"))
-		   ;;; If you have another "project" folder, you can hard code here.  
+         (root (uiop:ensure-directory-pathname
+                (or (first args)
+                    (merge-pathnames "Projetos/"
+                                     (user-homedir-pathname)))))
          (repos (find-git-repos root)))
-
-    (format t "~%Scanning immediate subdirectories of: ~A~%"
-            root)
 
     (format t "Found ~D repositories~%"
             (length repos))
