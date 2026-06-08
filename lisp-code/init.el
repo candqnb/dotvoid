@@ -97,6 +97,7 @@
 (setq-default tab-width 4)
 
 ;; C/C++
+(add-to-list 'auto-mode-alist '("\\.tpp\\'" . c++-mode))
 (add-hook
  'c-mode-common-hook
  (lambda ()
@@ -107,11 +108,11 @@
 
 ;; PDF
 (use-package pdf-tools
-  :ensure t
+  :defer t
   :config
-  (pdf-tools-install)
   (setq-default pdf-view-display-size 'fit-width)
   (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward))
+
 (dolist (hook '(pdf-view-mode-hook
                 image-mode-hook
                 doc-view-mode-hook))
@@ -120,14 +121,10 @@
               ;; Disable line-numbers-mode if not needed.
               (display-line-numbers-mode -1))))
 
-
 ;; History and convenience
 (save-place-mode 1)
-
 (savehist-mode 1)
-
 (recentf-mode 1)
-
 (setq recentf-max-saved-items 100)
 
 ;; Completion
