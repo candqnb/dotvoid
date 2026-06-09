@@ -9,14 +9,15 @@ example {P : Prop} (p : P) : P := by
     -- This examples defines a proof of P given p : P
 
 example {A B : Type} (x : A) (y z : B) := by
+    exact y
     -- exact gives a term that matches the goal exactly
     -- The linter warns about unused variables x and z;
     -- This is an exercise to show how to define an element of type B
-    exact y
 
 example : Unit := by
-    -- Has exactly one term ⟨⟩.
     exact ⟨⟩
+    -- Has exactly one term ⟨⟩.
+
 
 example (P Q : Prop) (p : Prop) : Prop := by
     exact Q
@@ -26,3 +27,14 @@ example (P Q : Prop) (p : Prop) : Prop := by
 
 example : Type := by
     exact Unit
+    -- Type is the built in type of types, to avoid contradictions
+    -- The Type is a synonym for Type 0, the type Unit is a element of
+    -- Type hence whe can solve by using exact Unit.
+
+example (P Q R : Prop) (q : Q) (r : R) : Type := by
+    exact Prop
+    -- Which such example we can also use Prop that is an
+    -- element of Type.
+
+-- The above code concludes all the seven levels of type world.
+-- Bellow is the function world.
